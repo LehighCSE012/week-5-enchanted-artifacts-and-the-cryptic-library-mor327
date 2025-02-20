@@ -1,5 +1,21 @@
 import random
 
+def acquire_item(inventory, item):
+    """
+    Add an item to the inventory.
+    
+    Args:
+        inventory (list): Current inventory
+        item (str): Item to add
+        
+    Returns:
+        list: Updated inventory
+    """
+    if item:
+        inventory.append(item)
+        print(f"\nYou obtained: {item}")
+    return inventory
+
 def discover_artifact(player_stats, artifacts, artifact_name):
     """
     Handle the discovery and application of magical artifacts.
@@ -92,11 +108,16 @@ def display_player_status(player_stats):
     print(f"\nPlayer Status - Health: {player_stats['health']}, Attack: {player_stats['attack']}")
 
 def display_inventory(inventory):
-    """Display current inventory items."""
+    """
+    Display current inventory items.
+    
+    Args:
+        inventory (list): List of items in inventory
+    """
     if inventory:
-        print("Items:", ", ".join(inventory))
+        print("\nInventory:", ", ".join(inventory))
     else:
-        print("Inventory is empty")
+        print("\nInventory is empty")
 
 def handle_path_choice(player_stats):
     """Handle player's choice of path."""
@@ -169,15 +190,13 @@ def enter_dungeon(player_stats, inventory, dungeon_rooms, clues):
             if success:
                 print(challenge_outcome[0])  # Success message
                 if item:
-                    inventory.append(item)
-                    print(f"You obtained: {item}")
+                    inventory = acquire_item(inventory, item)
             else:
                 print(challenge_outcome[1])  # Failure message
                 player_stats['health'] += challenge_outcome[3]  # Apply health change
         
         elif item:
-            inventory.append(item)
-            print(f"You found: {item}")
+            inventory = acquire_item(inventory, item)
         
         display_player_status(player_stats)
         if player_stats['health'] <= 0:
@@ -229,6 +248,7 @@ def main():
         treasure_obtained_in_combat = combat_encounter(player_stats, monster_health, has_treasure)
         if treasure_obtained_in_combat is not None:
             check_for_treasure(treasure_obtained_in_combat)
+            inventory = acquire_item(inventory, treasure_obtained_in_combat)
         
         # 30% chance to find an artifact after combat
         if random.random() < 0.3:
