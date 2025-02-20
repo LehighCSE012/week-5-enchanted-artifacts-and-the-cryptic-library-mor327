@@ -48,56 +48,70 @@ def find_clue(clues, new_clue):
         print("You already know this clue.")
     return clues
 
-def enter_dungeon(player_stats, inventory, dungeon_rooms, clues):
+def enter_dungeon(player_stats, inventory, dungeon_rooms, clues, artifacts):
     """
-    Handles the player's interaction with dungeon rooms.
+    Simulates the player entering a dungeon and interacting with various rooms.
 
     Parameters:
-        player_stats (dict): Player's stats (health and attack).
-        inventory (list): Player's inventory.
-        dungeon_rooms (list): List of dungeon rooms and their attributes.
-        clues (set): Set of collected clues.
+        player_stats (dict): Player's stats, including health and attack.
+        inventory (list): List of items the player is carrying.
+        dungeon_rooms (list of tuples): Each tuple represents a room in the format
+                                         (room_name, item, challenge_type, challenge_outcome).
+        clues (set): A set of clues the player has discovered.
+        artifacts (dict): A dictionary to store collected artifacts.
 
     Returns:
-        tuple: Updated player_stats, inventory, and clues.
+        None
     """
     for room in dungeon_rooms:
-        room_name, item, challenge_type, challenge_outcome = room
-        print(f"You enter the {room_name}.")
+        try:
+            room_name, item, challenge_type, challenge_outcome = room
+        except ValueError:
+            raise TypeError("Each room in dungeon_rooms must be a tuple with four elements.")
 
-        if room_name == "Cryptic Library":
-            print("A vast library filled with ancient, cryptic texts.")
-            possible_clues = [
-                "The treasure is hidden where the dragon sleeps.",
-                "The key lies with the gnome.",
-                "Beware the shadows.",
-                "The amulet unlocks the final door."
-            ]
-            selected_clues = random.sample(possible_clues, 2)
-            for clue in selected_clues:
-                clues = find_clue(clues, clue)
-
-            if "staff_of_wisdom" in inventory:
-                print("Using the Staff of Wisdom, you understand the meaning of the clues.")
-                print("You can bypass a puzzle challenge in another room.")
-                # Logic to bypass a puzzle challenge can be added here.
-
-        elif challenge_type == "puzzle":
-            print(challenge_outcome[0] if random.choice([True, False]) else challenge_outcome[1])
-            player_stats['health'] += challenge_outcome[2]
-
-        elif challenge_type == "trap":
-            print(challenge_outcome[0] if random.choice([True, False]) else challenge_outcome[1])
-            player_stats['health'] += challenge_outcome[2]
-
+        print(f"Entering {room_name}...")
+        
+        # Add item to inventory if present
         if item:
             inventory.append(item)
-            print(f"You found a {item}!")
+            print(f"Collected item: {item}")
 
-        print(f"Current Health: {player_stats['health']}")
-        print("---")
+        # Handle challenges
+        if challenge_type == "none":
+            print("No challenge here. Proceeding to the next room.")
+        elif challenge_type == "puzzle":
+            if isinstance(challenge_outcome, tuple) and len(challenge_outcome) == 3:
+                success_msg, fail_msg, health_penalty = challenge_outcome
+                # Simulate puzzle success or failure (for simplicity, always success here)
+                print(success_msg)
+            else:
+                raise TypeError("Puzzle challenge_outcome must be a tuple (success_msg, fail_msg, health_penalty).")
+        elif challenge_type == "trap":
+            if isinstance(challenge_outcome, tuple) and len(challenge_outcome) == 3:
+                success_msg, fail_msg, health_penalty = challenge_outcome
+                # Simulate trap failure (for simplicity, always fail here)
+                player_stats["health"] -= health_penalty
+                print(fail_msg)
+                print(f"Health reduced by {health_penalty}. Current health: {player_stats['health']}")
+            else:
+                raise TypeError("Trap challenge_outcome must be a tuple (success_msg, fail_msg, health_penalty).")
+        elif challenge_type == "library":
+            print("Discovered a library. Found a new clue!")
+            clues.add(f"Clue from {room_name}")
+        else:
+            raise ValueError(f"Unknown challenge type: {challenge_type}")
 
-    return player_stats, inventory, clues
+        # End dungeon if health drops to 0 or below
+        if player_stats["health"] <= 0:
+            print("Player has succumbed to their injuries. Game over!")
+            break
+
+    print("Dungeon exploration complete.")
+    print(f"Final stats: {player_stats}")
+    print(f"Inventory: {inventory}")
+    print(f"Clues: {clues}")
+    print(f"Artifacts: {artifacts}")
+
 
 def combat_encounter(player_stats, monster_health, has_treasure):
     """
